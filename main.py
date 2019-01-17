@@ -77,10 +77,21 @@ class Tests(unittest.TestCase):
         self.assertEqual(("A", "B", "C"), parse_args("(A and B) or C"))
 
     def test_parse_func(self):
-        expect = lambda A, B: A and B
+        expect = {(0, 0): 0,
+                  (0, 1): 0,
+                  (1, 0): 0,
+                  (1, 1): 1}
         actual, _ = parse_func("A and B")
         for b in binary_perms(2):
-            self.assertEqual(expect(*b), actual(*b), "expect({}) != actual({})".format(expect(*b), actual(*b)))
+            self.assertEqual(expect[b], actual(*b), "expect({}) != actual({})".format(expect[b], actual(*b)))
+
+        expect = {(0, 0): 0,
+                  (0, 1): 1,
+                  (1, 0): 1,
+                  (1, 1): 1}
+        actual, _ = parse_func("A or B")
+        for b in binary_perms(2):
+            self.assertEqual(expect[b], actual(*b), "expect({}) != actual({})".format(expect[b], actual(*b)))
 
 
 if __name__ == "__main__":
