@@ -26,10 +26,12 @@ def truth_table(*, func, args):
 
 
 def parse_args(func_str):
-    args = []
+    args = set()
     for c in func_str:
         if c.isalpha() and c.upper() == c:
-            args.append(c)
+            args.add(c)
+    args = list(args)
+    args.sort()
     return tuple(args)
 
 
@@ -37,7 +39,8 @@ def parse_func(func_str):
     args = parse_args(func_str)
     args_str = str(args).replace("'", "").replace("(", "").replace(")", "")
     func = eval("lambda {}:{}".format(args_str, func_str))
-    return func, args
+    translated_func = lambda *args: 1 if func(*args) else 0
+    return translated_func, args
 
 
 def print_truth_table(func_str):
