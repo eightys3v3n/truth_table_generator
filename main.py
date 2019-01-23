@@ -1,4 +1,5 @@
 import unittest
+import re
 
 
 def tobinary(i, length=0):
@@ -22,26 +23,41 @@ def truth_table(*, func, args):
     perms = binary_perms(len(args))
     for perm in perms:
         table.append((perm, func(*perm)))
+    table.sort(reverse=True)
     return tuple(table)
 
 
 def parse_args(func_str):
-    args = set()
-    for c in func_str:
-        if c.isalpha() and c.upper() == c:
-            args.add(c)
-    args = list(args)
-    args.sort()
+    # args = set()
+    # func_elements = func_str.split(' ')
+    # for e in func_elements:
+    #     if len(e) == 1 and e.isalpha() and e.upper() == e:
+    #         args.add(e)
+    # args = list(args)
+    # args.sort()
+    # return tuple(args)
+    func_str = " "+func_str+" "
+    args = re.findall("\W([A-Z])\W", func_str)
+    args = set(args)
     return tuple(args)
+
+
+def func_wrapper(func, *args):
+    r = func(*args)
+    if r is True:
+        r = 1
+    elif r is False:
+        r = 0
+    return r
 
 
 def parse_func(func_str):
     args = parse_args(func_str)
     args_str = str(args).replace("'", "").replace("(", "").replace(")", "")
     func = eval("lambda {}:{}".format(args_str, func_str))
-    translated_func = lambda *args: 1 if func(*args) else 0
+    translated_func = lambda *args: func_wrapper(func, *args)
     return translated_func, args
-
+#print_truth_table("A if B else False")
 
 def print_truth_table(func_str):
     func, args = parse_func(func_str)
@@ -74,10 +90,12 @@ class Tests(unittest.TestCase):
                   ((1, 0), 0),
                   ((1, 1), 1))
         actual = truth_table(func=lambda A, B: A and B, args=("A", "B"))
-        self.assertEqual(expect, actual)
+        self.assertCountEqual(expect, actual)
 
     def test_parse_args(self):
-        self.assertEqual(("A", "B", "C"), parse_args("(A and B) or C"))
+        self.assertCountEqual(("A", "B", "C"), parse_args("(A and B) or C"))
+        self.assertCountEqual(("A", "C"), parse_args("A or C"))
+        self.assertCountEqual(("A", "B"), parse_args("A if B else False"))
 
     def test_parse_func(self):
         expect = {(0, 0): 0,
